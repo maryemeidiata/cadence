@@ -22,9 +22,7 @@ def compute_task_risk(
                              • local competition pressure (how much of the
                                remaining capacity this task needs relative
                                to all other tasks competing within the same
-                               deadline window — replaces the old global
-                               system_pressure constant that penalised every
-                               task equally regardless of deadline proximity)
+                               deadline window)
 
       impact_weight        – normalised composite of strategic_importance
                              and business_impact  →  [0.1, 1.0]
@@ -36,7 +34,7 @@ def compute_task_risk(
     Key fix vs. previous version
     ----------------------------
     The old model applied a single global `system_over` constant to every
-    task, meaning a task due in 10 days bore the same system-load penalty
+    task, meaning a task due in 10 days had the same system-load penalty
     as one due tomorrow.  This version computes a *per-task* competition
     pressure: how much of the available capacity within *this task's*
     deadline window is already claimed by other tasks with equal or tighter
@@ -99,7 +97,7 @@ def compute_task_risk(
     out["dep"] = out["dependency_risk"].astype(bool).astype(int)
 
     # ------------------------------------------------------------------
-    # Impact weight  [0.1 … 1.0]
+    # Impact weight
     # ------------------------------------------------------------------
     out["impact_weight"] = (
         0.5 * out["strategic_importance"].astype(float)
@@ -112,7 +110,7 @@ def compute_task_risk(
     #
     # Weights are interpretable:
     #   overload_norm         most important individual signal
-    #   competition_pressure  contextual load signal (was global, now local)
+    #   competition_pressure  contextual load signal
     #   urgency               time pressure
     #   dep                   structural risk multiplier
     #   bias                  sets baseline so no-pressure tasks stay low-risk
@@ -151,7 +149,7 @@ def compute_weighted_stress(df_risk: pd.DataFrame) -> float:
     raises the stress index more than nine trivial tasks at 5%.
 
     Compare to the old unweighted mean which would report ~14 (stable) in
-    that exact scenario — masking the real risk.
+    that exact scenario, masking the real risk.
     """
     w = df_risk["impact_weight"]
     p = df_risk["failure_probability"]
@@ -172,8 +170,7 @@ def forecast_system_risk(
 
     Stress index is now impact-weighted (see compute_weighted_stress).
     The resulting dataframe can be used to tell the user exactly how much
-    stress drops per additional hour/day of capacity — a concrete,
-    actionable insight.
+    stress drops per additional hour/day of capacity.
     """
     if capacity_scenarios is None:
         capacity_scenarios = [-2, -1, 0, 1, 2]

@@ -8,7 +8,7 @@ def build_schedule(
     mode: str = "Academic",
 ) -> pd.DataFrame:
     """
-    Mode-aware greedy scheduler.
+    Mode-aware scheduler.
 
     Academic mode    → Earliest Deadline First (EDF).
     Operational mode → Highest Value Density first (priority_score / est_hours).

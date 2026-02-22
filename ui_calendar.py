@@ -5,7 +5,7 @@ import numpy as np
 
 
 # ------------------------------------------------------------------
-# Colour helpers
+# Colour
 # ------------------------------------------------------------------
 
 def _risk_colour(fp: float) -> str:
@@ -52,7 +52,7 @@ def render_calendar(schedule_df: pd.DataFrame, available_hours: float) -> None:
     #
     # Strategy: collapse consecutive days for the same task into a single
     # bar (start_day → end_day).  Non-consecutive segments become separate
-    # bars (task interrupted and resumed).
+    # bars.
     # ------------------------------------------------------------------
 
     # Sort so we can detect consecutive days easily

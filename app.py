@@ -14,7 +14,7 @@ from ui_strategic import render_strategic
 st.set_page_config(layout="wide", page_title="Cadence")
 
 # -------------------------
-# CSS — no input overrides, let Streamlit handle those natively
+# CSS
 # -------------------------
 st.markdown("""
 <style>

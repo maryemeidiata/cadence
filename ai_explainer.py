@@ -3,7 +3,7 @@ import numpy as np
 
 
 # ------------------------------------------------------------------
-# HTML helpers
+# HTML
 # ------------------------------------------------------------------
 
 def _dot(colour: str) -> str:
@@ -77,7 +77,7 @@ def generate_strategic_advice(
         )
 
     # ------------------------------------------------------------------
-    # 2. Risk distribution — concentrated vs. diffuse
+    # 2. Risk distribution
     # ------------------------------------------------------------------
     probs     = df_risk["failure_probability"].values
     risk_std  = float(np.std(probs))
