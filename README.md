@@ -1,8 +1,9 @@
 # Cadence
-# Workload Prioritization & Strategic Planning Engine
+### Workload Prioritization & Strategic Planning Engine
 
 Cadence is a Streamlit prototype that helps users manage task workloads intelligently. It goes beyond a simple to-do list by modelling risk, building an optimized schedule, and providing strategic recommendations based on your available capacity and deadlines.
 
+---
 
 ## What it does
 
@@ -13,16 +14,16 @@ Cadence is a Streamlit prototype that helps users manage task workloads intellig
 - **Forecasts system stress** across capacity scenarios
 - **Generates strategic recommendations** based on risk distribution, worst-consequence tasks, and capacity sensitivity
 
-
+---
 
 ## Planning Modes
 
+| Mode | Strategy | Best for |
+|------|----------|----------|
+| Academic | Earliest Deadline First | Students, deadline-driven work |
+| Operational | Value Density (priority/hour) | Teams, business planning |
 
-
-Academic Mode -  Earliest Deadline First, Students, deadline-driven work
-Operational Mode - Value Density (priority/hour), Teams, business planning
-
-
+---
 
 ## Setup
 
@@ -35,6 +36,7 @@ streamlit run app.py
 
 ## File Structure
 
+```
 cadence/
 ├── app.py              # Main Streamlit app
 ├── scoring.py          # Priority scoring engine
@@ -45,6 +47,9 @@ cadence/
 ├── ui_calendar.py      # Execution Plan tab (Gantt chart)
 ├── ui_strategic.py     # Strategic Outlook tab
 └── requirements.txt
+```
+
+---
 
 ## Built with
 
@@ -55,4 +60,4 @@ cadence/
 
 ---
 
-*Assignment 1 — Prototyping with Streamlit*
+*Assignment 1 — Prototyping with Data and AI*
