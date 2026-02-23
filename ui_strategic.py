@@ -10,10 +10,12 @@ def render_strategic(forecast_df, stress_index, df_risk):
         "Use this to quantify the value of adding capacity."
     )
 
-    st.line_chart(
-        forecast_df.set_index("capacity_hours_per_day")[["stress_index", "expected_loss_hours"]],
-        height=320,
-    )
+    chart_df = forecast_df.set_index("capacity_hours_per_day")[["stress_index", "expected_loss_hours"]]
+    chart_df = chart_df.rename(columns={
+        "stress_index": "Stress Index",
+        "expected_loss_hours": "Expected Loss (hours)"
+    })
+    st.line_chart(chart_df, height=320)
 
     st.markdown("## Strategic Summary")
 

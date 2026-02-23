@@ -71,6 +71,14 @@ header {visibility: hidden;}
     border-color: rgba(255,255,255,0.18) !important;
 }
 
+/* ── Teal tab underline ── */
+.stTabs [data-baseweb="tab-highlight"] {
+    background-color: #1A5C5E !important;
+}
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
+    color: #1A5C5E !important;
+}
+
 /* ── Header band ── */
 .header-band {
     background: linear-gradient(135deg, #0F3D3E 0%, #1A5C5E 100%);
@@ -319,7 +327,3 @@ with tab3:
         render_strategic(forecast_df, stress_index, df_risk)
     else:
         st.markdown(EMPTY_STATE, unsafe_allow_html=True)
-
-
-
-
