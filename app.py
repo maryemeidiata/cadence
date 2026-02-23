@@ -14,7 +14,7 @@ from ui_strategic import render_strategic
 st.set_page_config(layout="wide", page_title="Cadence")
 
 # -------------------------
-# CSS
+# CSS — no input overrides, let Streamlit handle those natively
 # -------------------------
 st.markdown("""
 <style>
@@ -273,6 +273,31 @@ if missed_deadlines > 0 and schedule_df is not None:
 
 
 # -------------------------
+# EMPTY STATE
+# -------------------------
+EMPTY_STATE = """
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 40px;text-align:center;">
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:24px;opacity:0.85;">
+        <rect x="8" y="8" width="48" height="48" rx="10" stroke="#1A5C5E" stroke-width="3" fill="none"/>
+        <line x1="20" y1="24" x2="44" y2="24" stroke="#1A5C5E" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="20" y1="32" x2="44" y2="32" stroke="#1A5C5E" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="20" y1="40" x2="34" y2="40" stroke="#1A5C5E" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="50" cy="50" r="10" fill="#1A5C5E"/>
+        <line x1="50" y1="45" x2="50" y2="55" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="45" y1="50" x2="55" y2="50" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <h2 style="font-size:24px;font-weight:700;color:#1E293B;margin:0 0 12px 0;">Welcome to Cadence</h2>
+    <p style="font-size:15px;color:#6B7280;max-width:380px;line-height:1.6;margin:0 0 28px 0;">Add your first task in the sidebar to start analysing your workload, modelling risk, and building your schedule.</p>
+    <div style="display:flex;align-items:center;gap:8px;background:#0F3D3E;color:white;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 8L6 4M6 12L10 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Add your first task in the sidebar
+    </div>
+</div>
+"""
+
+# -------------------------
 # TABS
 # -------------------------
 tab1, tab2, tab3 = st.tabs(["Situation", "Execution Plan", "Strategic Outlook"])
@@ -281,16 +306,20 @@ with tab1:
     if df_risk is not None:
         render_overview(df_risk)
     else:
-        st.info("Add tasks to begin.")
+        st.markdown(EMPTY_STATE, unsafe_allow_html=True)
 
 with tab2:
     if schedule_df is not None:
         render_calendar(schedule_df, available_hours)
     else:
-        st.info("Execution plan will appear once tasks are added.")
+        st.markdown(EMPTY_STATE, unsafe_allow_html=True)
 
 with tab3:
     if forecast_df is not None:
         render_strategic(forecast_df, stress_index, df_risk)
     else:
-        st.info("Strategic analysis will appear once tasks are added.")
+        st.markdown(EMPTY_STATE, unsafe_allow_html=True)
+
+
+
+
