@@ -9,18 +9,15 @@ import numpy as np
 # ------------------------------------------------------------------
 
 def _risk_colour(fp: float) -> str:
-    """
-    Maps failure_probability [0,1] to a hex colour on a
-    green → amber → red gradient.
-    """
+    """Maps failure_probability to brand-aligned hex colour."""
     if fp < 0.35:
-        return "#22C55E"   # green
+        return "#0F6E56"   # teal green (matches task card low)
     elif fp < 0.60:
-        return "#F59E0B"   # amber
+        return "#D97706"   # amber (matches task card moderate)
     elif fp < 0.80:
-        return "#EF4444"   # red
+        return "#DC2626"   # red (matches task card high)
     else:
-        return "#7F1D1D"   # deep red — critical
+        return "#991B1B"   # deep red — critical
 
 
 def _risk_label(fp: float) -> str:
@@ -141,9 +138,9 @@ def render_calendar(schedule_df: pd.DataFrame, available_hours: float) -> None:
             y0=y_pos - bar_height / 2,
             y1=y_pos + bar_height / 2,
             fillcolor=colour,
-            opacity=0.85,
-            line=dict(color="white", width=1.5),
-            layer="below",
+            opacity=0.90,
+            line=dict(color=colour, width=0.5),
+            layer="above",
         )
 
         # Invisible scatter point for hover tooltip
@@ -157,23 +154,25 @@ def render_calendar(schedule_df: pd.DataFrame, available_hours: float) -> None:
             showlegend=False,
         ))
 
-        # Task label inside bar (if wide enough)
+        # Task label inside bar
         bar_width_days = seg["end"] - seg["start"] + 1
-        if bar_width_days >= 2:
-            fig.add_annotation(
-                x=(x_start + x_end) / 2,
-                y=y_pos,
-                text=f"<b>{task}</b> · {hours}h",
-                showarrow=False,
-                font=dict(color="white", size=11),
-                xanchor="center",
-                yanchor="middle",
-            )
+        max_chars = max(4, bar_width_days * 8)
+        short_name = task[:max_chars] + "…" if len(task) > max_chars else task
+        fig.add_annotation(
+            x=(x_start + x_end) / 2,
+            y=y_pos,
+            text=f"<b>{short_name}</b>",
+            showarrow=False,
+            font=dict(color="white", size=11 if bar_width_days >= 2 else 10),
+            xanchor="center",
+            yanchor="middle",
+        )
 
     # ------------------------------------------------------------------
     # Deadline markers (vertical dashed line per task at its deadline day)
     # ------------------------------------------------------------------
     seen_deadlines: set = set()
+    max_day = int(schedule_df["day"].max())
     for _, seg in gantt_df.iterrows():
         task         = seg["task"]
         deadline_day = seg["deadline_day"]
@@ -184,19 +183,22 @@ def render_calendar(schedule_df: pd.DataFrame, available_hours: float) -> None:
             continue
         seen_deadlines.add(key)
 
-        # Vertical tick mark at the task's y-row
+        # Clip deadline position to visible range
+        dl_x = min(deadline_day, max_day + 0.5)
+
         fig.add_shape(
             type="line",
-            x0=deadline_day + 0.45,
-            x1=deadline_day + 0.45,
+            x0=dl_x + 0.45,
+            x1=dl_x + 0.45,
             y0=y_pos - bar_height / 2 - 0.05,
             y1=y_pos + bar_height / 2 + 0.05,
             line=dict(color="#1E293B", width=2, dash="dot"),
         )
+        dl_label = "DL" if deadline_day <= max_day else f"DL d{deadline_day}"
         fig.add_annotation(
-            x=deadline_day + 0.45,
+            x=dl_x + 0.45,
             y=y_pos + bar_height / 2 + 0.12,
-            text="DL",
+            text=dl_label,
             showarrow=False,
             font=dict(size=9, color="#1E293B"),
             xanchor="center",
@@ -256,6 +258,7 @@ def render_calendar(schedule_df: pd.DataFrame, available_hours: float) -> None:
             showgrid=True,
             gridcolor="#E2E8F0",
             zeroline=False,
+            range=[0.2, max(all_days) + 0.8],
         ),
         yaxis=dict(
             tickmode="array",
@@ -279,19 +282,19 @@ def render_calendar(schedule_df: pd.DataFrame, available_hours: float) -> None:
     st.markdown("""
     <div style="display:flex; gap:24px; margin-top:-8px; margin-bottom:16px; flex-wrap:wrap;">
         <div style="display:flex; align-items:center; gap:6px;">
-            <div style="width:14px;height:14px;border-radius:3px;background:#22C55E;"></div>
+            <div style="width:14px;height:14px;border-radius:3px;background:#0F6E56;"></div>
             <span style="font-size:13px;color:#374151;">Low risk</span>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
-            <div style="width:14px;height:14px;border-radius:3px;background:#F59E0B;"></div>
+            <div style="width:14px;height:14px;border-radius:3px;background:#D97706;"></div>
             <span style="font-size:13px;color:#374151;">Moderate risk</span>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
-            <div style="width:14px;height:14px;border-radius:3px;background:#EF4444;"></div>
+            <div style="width:14px;height:14px;border-radius:3px;background:#DC2626;"></div>
             <span style="font-size:13px;color:#374151;">High risk</span>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
-            <div style="width:14px;height:14px;border-radius:3px;background:#7F1D1D;"></div>
+            <div style="width:14px;height:14px;border-radius:3px;background:#991B1B;"></div>
             <span style="font-size:13px;color:#374151;">Critical</span>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
@@ -309,7 +312,7 @@ def render_calendar(schedule_df: pd.DataFrame, available_hours: float) -> None:
     # Missed deadline callouts below chart
     # ------------------------------------------------------------------
     if deadline_risks:
-        st.markdown("### ⚠️ Deadline Risks")
+        st.markdown("### Deadline Risks")
         for risk in deadline_risks:
             st.error(
                 f"**{risk['task']}** — {risk['unfinished_hours']}h will remain "

@@ -18,10 +18,10 @@ def _dot(colour: str) -> str:
 STATUS_COLOURS = {
     "critical":    "#DC2626",   # red
     "elevated":    "#D97706",   # amber
-    "manageable":  "#CA8A04",   # yellow-gold
-    "stable":      "#16A34A",   # green
-    "info":        "#2563EB",   # blue
-    "warning":     "#9333EA",   # purple — used for concentration/distribution findings
+    "manageable":  "#D97706",   # yellow-gold
+    "stable":      "#0F6E56",   # green
+    "info":        "#1A5C5E",   # blue
+    "warning":     "#D97706",   # purple — used for concentration/distribution findings
 }
 
 
