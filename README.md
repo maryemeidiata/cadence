@@ -1,23 +1,21 @@
 # Cadence
 ### Workload Prioritization & Strategic Planning Engine
 
-Cadence is a Streamlit prototype that helps users manage task workloads intelligently. It goes beyond a simple to-do list by modelling risk, building an optimized schedule, providing AI-powered strategic advice, and generating personalised daily plans.
+Cadence helps users manage task workloads intelligently. It goes beyond a simple to-do list by modelling risk, building an optimized schedule, providing AI-powered strategic advice, and generating personalised daily plans.
 
 ---
 
-## What it does
+## Features
 
-- **Scores tasks** by urgency, strategic importance, business impact, and dependency risk
-- **Estimates failure probability** per task using a sigmoid risk model with per-task competition pressure
-- **Builds a day-by-day schedule** using mode-aware algorithms (Earliest Deadline First for Academic, Value Density for Operational)
-- **Visualizes the schedule** as an interactive Gantt chart colour-coded by risk level
-- **Forecasts system stress** across capacity scenarios
-- **Generates strategic recommendations** based on risk distribution, worst-consequence tasks, and capacity sensitivity
-- **Pulse — AI Strategy Coach** powered by Cohere with tool use: ask questions about your workload, run what-if scenarios, compare options, and get actionable advice grounded in your live data
-- **Smart Task Import** using a two-pass LLM chain: paste text or upload a PDF (syllabus, email, meeting notes) and the AI extracts structured tasks with validation
-- **Daily Plan** — AI-generated hour-by-hour schedule for today that respects your personal availability and prioritises by risk and deadline
-- **Progress tracking** with visual progress bars on each task
-- **Export** your schedule as a calendar file (.ics) or a PDF report
+- **Risk Scoring** — Scores tasks by urgency, strategic importance, business impact, and dependency risk using a sigmoid failure probability model
+- **Execution Timeline** — Gantt chart showing a day-by-day schedule built with mode-aware algorithms (Earliest Deadline First or Value Density)
+- **Risk Forecast** — Dual-axis chart showing how stress and expected loss change across capacity scenarios
+- **Strategic Summary** — AI-generated analysis of risk distribution, worst-consequence tasks, and capacity sensitivity
+- **Sync — AI Strategy Coach** — Conversational chatbot powered by Cohere with tool use: ask questions, run what-if scenarios, and compare options grounded in your live data
+- **Smart Task Import** — Paste text or upload a PDF and the AI extracts structured tasks using a two-pass LLM chain (extract + validate)
+- **Daily Plan** — AI-generated hour-by-hour schedule that respects your personal availability windows
+- **Progress Tracking** — Log hours completed per task; the risk model recalculates with remaining hours
+- **Exports** — Download deadlines as a calendar file (.ics) or a full workload report (.pdf); export daily plan time blocks to your calendar
 
 ---
 
@@ -40,7 +38,7 @@ streamlit run app.py
 
 Get a free Cohere API key at [dashboard.cohere.com/api-keys](https://dashboard.cohere.com/api-keys).
 
-For Streamlit Cloud deployment, add `CO_API_KEY` in the app dashboard under Settings → Secrets.
+For Streamlit Cloud deployment, add `CO_API_KEY` in Settings > Secrets.
 
 ---
 
@@ -48,21 +46,21 @@ For Streamlit Cloud deployment, add `CO_API_KEY` in the app dashboard under Sett
 
 ```
 cadence/
-├── app.py              # Main Streamlit app — UI layout, KPIs, tabs
+├── app.py              # Main app — layout, header, KPIs, tabs
 ├── scoring.py          # Priority scoring engine
 ├── risk_model.py       # Failure probability & stress index
 ├── scheduler.py        # Mode-aware task scheduler
 ├── ai_explainer.py     # Strategic recommendation engine
-├── llm_coach.py        # Pulse — AI Coach with Cohere tool use
-├── llm_import.py       # Smart Import — two-pass LLM extraction chain
-├── llm_daily_plan.py   # Daily Plan — structured LLM output generation
+├── llm_coach.py        # Sync — AI Coach with Cohere tool use
+├── llm_import.py       # Smart Import — two-pass LLM extraction
+├── llm_daily_plan.py   # Daily Plan — structured LLM output
 ├── ui_overview.py      # Situation tab (task cards, progress, exports)
 ├── ui_calendar.py      # Execution Plan tab (Gantt chart)
-├── ui_strategic.py     # Strategic Outlook tab
-├── ui_coach.py         # Pulse chat interface
+├── ui_strategic.py     # Strategic Outlook tab (forecast + summary)
+├── ui_coach.py         # Sync chat interface
 ├── ui_import.py        # Smart Import interface
 ├── ui_daily_plan.py    # Daily Plan visual timeline
-├── requirements.txt    # Python dependencies
+├── requirements.txt    # Dependencies
 └── .gitignore          # Keeps API keys out of the repo
 ```
 
@@ -70,26 +68,25 @@ cadence/
 
 ## LLM Architecture
 
-Cadence uses three distinct, non-straightforward LLM integration patterns:
+Three distinct non-straightforward LLM integration patterns:
 
-### 1. Pulse — AI Strategy Coach
+### 1. Sync — AI Strategy Coach
 - **Pattern:** Multi-turn conversational chatbot with tool use
 - **Tools:** `get_current_analysis`, `explain_task_risk`, `run_what_if_scenario`, `compare_scenarios`
-- **How it works:** User sends a message → Cohere decides which tools to call → tools execute locally (running the risk model and scheduler with modified parameters) → results are fed back to Cohere → Cohere generates a grounded natural-language response
-- **Why non-straightforward:** Multi-turn conversation history, automatic tool selection by the LLM, tool results that re-run the entire data pipeline, iterative tool-calling loop (up to 5 rounds)
+- **Flow:** User message → Cohere selects tools → tools execute locally (re-running risk model/scheduler) → results fed back → Cohere generates grounded response
+- **Non-straightforward because:** Multi-turn history, automatic tool selection, tool results that re-run the data pipeline, iterative tool-calling loop
 
 ### 2. Smart Task Import
 - **Pattern:** Two-pass LLM chain with post-processing
-- **Pass 1 (Extract):** LLM parses unstructured text (or PDF content) into structured task JSON
-- **Pass 2 (Validate):** A second LLM call reviews the extracted tasks for reasonableness — checking hour estimates, deadlines, and dependencies
-- **Post-processing:** Python normalizes key names (handling multilingual LLM output), clamps value ranges, deduplicates by name, and conforms to the internal task schema
-- **Why non-straightforward:** Two sequential LLM calls where the output of the first feeds the second, plus substantial Python post-processing of LLM output
+- **Pass 1:** Extract tasks from unstructured text/PDF as structured JSON
+- **Pass 2:** Validate and adjust hour estimates, deadlines, dependencies
+- **Post-processing:** Normalize key names, clamp ranges, deduplicate, conform to internal schema
+- **Non-straightforward because:** Two sequential LLM calls where output of first feeds the second, plus robust Python post-processing handling multilingual LLM output
 
 ### 3. Daily Plan
-- **Pattern:** Structured JSON output generation with context-aware reasoning
-- **How it works:** The LLM receives the full computed risk data, the user's progress, AND their free-form availability description (e.g. "busy 9-12, meeting at 3"). It generates a structured JSON array of time blocks with task assignments, sub-activities, and reasoning
-- **Post-processing:** Python validates the JSON structure, normalizes time formats, and renders the blocks as a visual timeline with color-coded task categories
-- **Why non-straightforward:** The LLM must reason about time constraints, task priorities, energy management, and personal scheduling — then output precisely formatted JSON that drives the visual UI. The free-form availability input showcases the LLM's ability to parse natural language constraints.
+- **Pattern:** Structured JSON output with context-aware reasoning
+- **Flow:** LLM receives task data + risk scores + progress + availability windows → generates hour-by-hour time blocks as JSON → Python validates and renders as visual timeline
+- **Non-straightforward because:** LLM reasons about time constraints, energy management, and personal scheduling; outputs precisely formatted JSON that drives the UI; availability parsed from structured time pickers
 
 ---
 
