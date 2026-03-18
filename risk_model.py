@@ -15,11 +15,11 @@ def compute_task_risk(
     Computes per-task risk metrics:
 
       failure_probability  – sigmoid of a risk score that combines:
-                             • local overload (capacity vs. required hours
+                             - local overload (capacity vs. required hours
                                within the task's own deadline window)
-                             • urgency (1 / days_left)
-                             • dependency flag
-                             • local competition pressure (how much of the
+                             - urgency (1 / days_left)
+                             - dependency flag
+                             - local competition pressure (how much of the
                                remaining capacity this task needs relative
                                to all other tasks competing within the same
                                deadline window)

@@ -1,7 +1,7 @@
 """
 Smart Task Import — LLM-powered extraction of tasks from unstructured text.
 
-This is the second non-straightforward LLM feature.  It uses a two-pass
+Uses a two-pass
 LLM chain:
 
   Pass 1 (Extract):  The LLM receives raw unstructured text (syllabus,
@@ -16,10 +16,10 @@ The validated output is then post-processed in Python to conform to
 Cadence's task schema and can be directly added to the user's workload.
 
 Architecture notes:
-  • Both passes use structured JSON output with careful prompt engineering.
-  • Python post-processing validates types, clamps ranges, deduplicates,
+  - Both passes use structured JSON output with careful prompt engineering.
+  - Python post-processing validates types, clamps ranges, deduplicates,
     and converts to the internal task format.
-  • This is clearly non-straightforward: multi-call chain + complex
+  - Uses a multi-call chain with complex
     post-processing of LLM output.
 """
 
@@ -46,9 +46,9 @@ def _get_client() -> cohere.ClientV2:
     return cohere.ClientV2(api_key)
 
 
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 # Pass 1: Extract tasks from unstructured text
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 
 EXTRACT_SYSTEM_PROMPT = """You are a task extraction engine. Given unstructured text (a syllabus, email, project brief, meeting notes, etc.), extract all actionable tasks.
 

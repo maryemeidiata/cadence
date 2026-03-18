@@ -1,6 +1,6 @@
 """
 Daily Plan — LLM-generated hour-by-hour schedule.
-Third LLM feature: structured JSON output + post-processing.
+Generates an hour-by-hour schedule as structured JSON.
 """
 
 import json

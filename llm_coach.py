@@ -2,24 +2,19 @@
 AI Coach — Cohere-powered strategic advisor with tool use.
 
 The coach has access to the user's computed risk data, schedule, and
-forecasts through callable tools.  It can:
-  • Summarise current workload risk
-  • Explain why a specific task is high/low risk
-  • Run what-if scenarios (drop a task, change capacity, move deadline)
-  • Compare multiple scenarios and narrate tradeoffs
+forecasts through callable tools. It can:
+  - Summarise current workload risk
+  - Explain why a specific task is high/low risk
+  - Run what-if scenarios (drop a task, change capacity, move deadline)
+  - Compare multiple scenarios and narrate tradeoffs
 
-Architecture
-────────────
-1.  User sends a message via the Streamlit chat UI.
-2.  The message + conversation history + tool schemas are sent to Cohere.
-3.  If Cohere decides to call tools, we execute them locally (they run
-    your existing risk model / scheduler) and return results to Cohere.
-4.  Cohere generates a final natural-language response grounded in tool
-    outputs (with citations).
-5.  The response is streamed back to the user.
-
-This is a multi-turn, multi-call pattern with tool use — clearly
-non-straightforward LLM usage.
+Architecture:
+  1. User sends a message via the Streamlit chat UI.
+  2. The message + conversation history + tool schemas are sent to Cohere.
+  3. If Cohere decides to call tools, we execute them locally (they run
+     the risk model / scheduler with modified parameters).
+  4. Cohere generates a natural-language response grounded in tool outputs.
+  5. The response is displayed in the chat.
 """
 
 import json
@@ -33,9 +28,9 @@ from risk_model import compute_task_risk, compute_weighted_stress, forecast_syst
 from scheduler import build_schedule
 
 
-# ──────────────────────────────────────────────
+# ---
 # Cohere client (reads CO_API_KEY env var)
-# ──────────────────────────────────────────────
+# ---
 
 def _get_client() -> cohere.ClientV2:
     """Return a Cohere V2 client. Reads from Streamlit secrets or CO_API_KEY env var."""
@@ -57,9 +52,9 @@ def _get_client() -> cohere.ClientV2:
     return cohere.ClientV2(api_key)
 
 
-# ──────────────────────────────────────────────
+# ---
 # System prompt
-# ──────────────────────────────────────────────
+# ---
 
 SYSTEM_PROMPT = """You are Sync, the AI strategy coach inside Cadence — a workload planning tool.
 
@@ -76,9 +71,9 @@ How to respond:
 - Always respond in English."""
 
 
-# ──────────────────────────────────────────────
+# ---
 # Tool schemas (Cohere V2 format)
-# ──────────────────────────────────────────────
+# ---
 
 TOOLS = [
     {
@@ -190,9 +185,9 @@ TOOLS = [
 ]
 
 
-# ──────────────────────────────────────────────
+# ---
 # Tool implementations
-# ──────────────────────────────────────────────
+# ---
 
 def _get_workload_context() -> dict:
     """Pull current computed state from session_state."""
@@ -393,9 +388,9 @@ def tool_compare_scenarios(
     }]
 
 
-# ──────────────────────────────────────────────
+# ---
 # Tool dispatcher
-# ──────────────────────────────────────────────
+# ---
 
 FUNCTIONS_MAP = {
     "get_current_analysis": lambda **kwargs: tool_get_current_analysis(),
@@ -405,9 +400,9 @@ FUNCTIONS_MAP = {
 }
 
 
-# ──────────────────────────────────────────────
+# ---
 # Main chat function (multi-turn with tool loop)
-# ──────────────────────────────────────────────
+# ---
 
 def chat_with_coach(user_message: str, conversation_history: list[dict]) -> tuple[str, list[dict]]:
     """

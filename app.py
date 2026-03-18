@@ -1,11 +1,24 @@
+"""
+Cadence — Main Streamlit application.
+
+This is the entry point. It handles:
+- Page config and CSS theming
+- Sidebar (task input, planning mode, settings)
+- Pipeline: scoring -> risk model -> scheduler -> forecast
+- Progress tracking (slider adjusts remaining hours fed into the pipeline)
+- Tab routing to each UI module
+"""
+
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 
+# Core pipeline modules
 from scoring import compute_priority_scores
 from scheduler import build_schedule
 from risk_model import compute_task_risk, forecast_system_risk, compute_weighted_stress
 
+# UI modules — one per tab
 from ui_overview import render_overview
 from ui_calendar import render_calendar
 from ui_strategic import render_strategic
@@ -47,7 +60,7 @@ st.markdown("""
     fill: #0F3D3E !important;
 }
 
-/* ── Force sidebar toggle button to always be visible ── */
+/* Force sidebar toggle button to always be visible */
 [data-testid="collapsedControl"] {
     display: block !important;
     visibility: visible !important;
@@ -97,7 +110,7 @@ button[data-testid="stSidebarCollapsedControl"] {
 .risk-badge.low      { background: #D1FAE5; color: #065F46; }
 .strategy-card { background: white; padding: 24px 28px; border-radius: 12px; border: 0.5px solid #D0DADA; line-height: 1.8; }
 
-/* ── Brand-aligned buttons (teal instead of red) ── */
+/* Brand-aligned buttons (teal instead of red) */
 .stButton > button[kind="primary"],
 button[data-testid="stBaseButton-primary"] {
     background-color: #0F3D3E !important;
@@ -110,7 +123,7 @@ button[data-testid="stBaseButton-primary"]:hover {
     border-color: #1A5C5E !important;
 }
 
-/* ── Teal slider thumb and track ── */
+/* Teal slider thumb and track */
 .stSlider [data-baseweb="slider"] [role="slider"] {
     background: #1A5C5E !important;
 }
@@ -118,7 +131,7 @@ button[data-testid="stBaseButton-primary"]:hover {
     background: #1A5C5E !important;
 }
 
-/* ── Teal download buttons ── */
+/* Teal download buttons */
 .stDownloadButton > button {
     background-color: #0F3D3E !important;
     border-color: #0F3D3E !important;
@@ -129,7 +142,7 @@ button[data-testid="stBaseButton-primary"]:hover {
     border-color: #1A5C5E !important;
 }
 
-/* ── Tab font size ── */
+/* Tab font size */
 .stTabs [data-baseweb="tab"] {
     font-size: 15px !important;
 }
@@ -180,7 +193,8 @@ st.session_state["coach_mode"] = mode
 st.session_state["coach_available_hours"] = available_hours
 st.session_state["coach_planning_horizon"] = planning_horizon
 
-# ── Adjust tasks for progress before computing ──
+# When the user logs progress (e.g. 3 of 8 hours done), subtract completed
+# hours so the risk model only sees the remaining work.
 adjusted_tasks = []
 for t in st.session_state.tasks:
     adj = dict(t)
@@ -189,9 +203,11 @@ for t in st.session_state.tasks:
     adj["est_hours"] = max(0.0, remaining) if remaining <= 0 else remaining
     adjusted_tasks.append(adj)
 
-# Filter out fully completed tasks for the pipeline (but keep all for display)
+# Completed tasks (0h left) don't need scheduling — filter them out.
+# We still keep them in st.session_state.tasks for the task cards.
 active_tasks = [t for t in adjusted_tasks if t["est_hours"] > 0]
 
+# Pipeline runs: scoring -> risk -> schedule -> forecast
 df_risk = schedule_df = forecast_df = None
 stress_index = expected_loss = high_risk_count = missed_deadlines = on_track_count = 0
 total_tasks = len(st.session_state.tasks)
@@ -202,13 +218,17 @@ if active_tasks:
     df_risk     = compute_task_risk(df_scored, available_hours, planning_horizon)
     schedule_df = build_schedule(df_risk, available_hours, planning_horizon, mode=mode)
     forecast_df = forecast_system_risk(df_scored, available_hours, planning_horizon)
+
+    # KPI metrics for the header
     stress_index     = compute_weighted_stress(df_risk)
     expected_loss    = round(float(df_risk["expected_loss_hours"].sum()), 1)
     high_risk_count  = int((df_risk["failure_probability"] >= 0.7).sum())
     deadline_risks   = schedule_df.attrs.get("deadline_risks", [])
     missed_deadlines = len(deadline_risks)
     on_track_count   = int((df_risk["failure_probability"] < 0.5).sum())
-    # Restore original est_hours for display in task cards
+
+    # Restore original est_hours for the task card display (so it shows
+    # "8.0h estimated" not "5.0h estimated" when 3h are done)
     for i, row in df_risk.iterrows():
         for orig in st.session_state.tasks:
             if orig["name"] == row["name"]:
